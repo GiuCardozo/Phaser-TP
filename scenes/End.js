@@ -15,6 +15,14 @@ create() {
     .setOrigin[0.5];
 
     this.add.text(400, 350, `Score ${this.score}`); //Texto de puntaje
+    
+    this.r = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+  }
+
+  update() {
+    if (this.r.isDown) {
+      this.scene.start("main");
 }
 
+}
 }

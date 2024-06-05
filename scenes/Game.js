@@ -158,11 +158,11 @@ export default class Game extends Phaser.Scene {
     recolectable.setVelocity(0, 100);
     recolectable.setScale(3);
     
-    const rebote = Phaser.Math.FloatBetween(0.4, 0.8);
-    recolectable.setBounce(rebote);
+    const rebote = Phaser.Math.FloatBetween(0.4, 0.8); //determinar cuanto rebote
+    recolectable.setBounce(rebote); //rebote
 
-    recolectable.setData("puntos", this.figuras[tipo].puntos);
-    recolectable.setData("tipo", tipo);
+    recolectable.setData("puntos", this.figuras[tipo].puntos); //Setear datos de puntos
+    recolectable.setData("tipo", tipo); //Setear datos de tipos de recolectables
 
   }
 
@@ -209,8 +209,8 @@ export default class Game extends Phaser.Scene {
 onShapeCollect(personaje, recolectable) {
   console.log("Recolectado" , recolectable.texture.key);
 
-  const nombrefig = recolectable.getData("tipo"); //Identificar cual figura se recolecta
-  const puntosfig = recolectable.getData("puntos"); //Identificar cuantos puntos suma esa figura
+  const nombrefig = recolectable.getData("tipo"); //Obtener datos de recolectable
+  const puntosfig = recolectable.getData("puntos"); //Obtener datos de puntos
   this.score += puntosfig; //Sumar los puntos de la figura al score
   console.log(this.score);
   this.figuras[nombrefig].cantidad += 1;
@@ -253,7 +253,7 @@ handlerTimer(){
 onRecolectableBounced(recolectable, plataforma) {
   //recolectable rebote
   let puntos = recolectable.getData("puntos");
-  puntos -= 5;
+  puntos -= 5; //restar 5 puntos por rebote
   recolectable.setData("puntos", puntos);
   if(puntos <= 0) {
     recolectable.destroy();
