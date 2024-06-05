@@ -8,13 +8,14 @@ export default class Game extends Phaser.Scene {
   init() {
     //inicializar variables
     this.gameOver= false; //gameover
-    this.timer= 10; //contador
+    this.timer= 30; //contador
     this.score = 0; //contador de score
     this.figuras = { //grupo de figuras con su valor
       "triangulo": {puntos: 10, cantidad: 0},
       "cuadrado": {puntos: 20, cantidad: 0},
-      "rombo": {puntos: 30, cantidad: 0}
-    }
+      "rombo": {puntos: 30, cantidad: 0},
+      "bomb": {puntos: -10, cantidad: 0},
+    };
   }
 
   preload() {
@@ -27,18 +28,42 @@ export default class Game extends Phaser.Scene {
     this.load.image("plataforma","../public/assets/platform.png");
 
     //import personaje
-    this.load.image("personaje", "../public/assets/Ninja.png");
+    this.load.spritesheet("personaje","../public/assets/ninja_anim.png", {frameWidth: 32, frameHeight: 32});
 
     //import recolectables
-    this.load.image("rombo", "../public/assets/diamond.png");
+    this.load.image("rombo", "../public/assets/naranja.png");
     
-    this.load.image("cuadrado", "../public/assets/square.png");
+    this.load.image("cuadrado", "../public/assets/manzana.png");
 
-    this.load.image("triangulo", "../public/assets/triangle.png");
+    this.load.image("triangulo", "../public/assets/pera.png");
+    
+    this.load.image("bomb", "../public/assets/bomb.png");
   }
 
   create() {  //Todo lo que se agrega en la pantalla va aquí
     //crear elementos
+
+    this.anims.create({ //crear animación
+      key:"quieto",
+      frames: this.anims.generateFrameNumbers("personaje", {start:0,end:4}), //Frames de inicio y fin
+      frameRate:6, //Velocidad de fps
+      repeat:-1 //-1 significa infinito
+    })
+
+    this.anims.create({
+      key:"caminar",
+      frames: this.anims.generateFrameNumbers("personaje", {start:6,end:8}),
+      frameRate:6,
+      repeat:-1
+    })
+
+    this.anims.create({
+      key:"salto",
+      frames: this.anims.generateFrameNumbers("personaje", {start:10,end:12}),
+      frameRate:6,
+      repeat:-1
+    })
+
     this.cielo = this.add.image(400,300, "cielo");
     this.cielo.setScale(2);
 
@@ -47,12 +72,12 @@ export default class Game extends Phaser.Scene {
     //al grupo de plataformas agregar una plataforma
     this.plataformas.create(400,568,"plataforma").setScale(2).refreshBody();
 
-    this.plataformas.create(300,200,"plataforma").refreshBody();
+    this.plataformas.create(300,350,"plataforma").refreshBody();
 
     //crear personaje //.image aqui porque es una imagen sin animacion, y .sprite cuando es algo con animacion
-    this.personaje = this.physics.add.image(400,300, "personaje");
-    this.personaje.setScale(0.1);
-    this.personaje.setCollideWorldBounds(true);
+    this.personaje = this.physics.add.sprite(400,300, "personaje").setScale(3); //(fisicas, coordenadas, "key")
+    this.personaje.setSize(18, 22);
+    this.personaje.setCollideWorldBounds(true); //Activar colision
 
     //agregar colision entre personaje y plataforma   // una version alternativa de agregar colision a plataformas / objetos (this.plataforma.setCollideWorldBounds(true))
     this.physics.add.collider(this.personaje, this.plataformas);   
@@ -68,10 +93,9 @@ export default class Game extends Phaser.Scene {
     //colision del personaje y los recolectables
     
 
-    //agregar evento de 3 segundo
+    //agregar evento de 1 segundo
     this.time.addEvent({
-      delay: 3000,
-      callback: console.log("hola"),
+      delay: 1000,
       callback: this.onSecond,
       callbackScope: this,
       loop: true,
@@ -88,7 +112,7 @@ export default class Game extends Phaser.Scene {
       loop: true,
     })
 
-    //Agregar texto de timer en la esquina superior derecha
+    //Agregar texto de timer en la esquina superior izquierda
     this.timerText = this.add.text(10, 10, `Tiempo restante: ${this.timer}` , {
       fontSize: "32px",
       fill:"#fff",
@@ -99,6 +123,14 @@ export default class Game extends Phaser.Scene {
       this.personaje,
       this.recolectables,
       this.onShapeCollect,
+      null,
+      this
+    );
+
+    this.physics.add.collider (
+      this.recolectables,
+      this.plataformas,
+      this.onRecolectableBounced,
       null,
       this
     );
@@ -116,7 +148,7 @@ export default class Game extends Phaser.Scene {
 
   onSecond() {
     //crear respawneo recolectable
-    const tipos = ["triangulo","cuadrado","rombo"];
+    const tipos = ["triangulo","cuadrado","rombo", "bomb"];
     const tipo = Phaser.Math.RND.pick(tipos); //aleatoridad de elementos que aparecen
     let recolectable = this.recolectables.create(
       Phaser.Math.Between(10, 790),
@@ -124,20 +156,35 @@ export default class Game extends Phaser.Scene {
       tipo
     );
     recolectable.setVelocity(0, 100);
+    recolectable.setScale(3);
     
+    const rebote = Phaser.Math.FloatBetween(0.4, 0.8);
+    recolectable.setBounce(rebote);
+
+    recolectable.setData("puntos", this.figuras[tipo].puntos);
+    recolectable.setData("tipo", tipo);
+
   }
 
   update() {
     //movimiento del personaje
     if (this.cursor.left.isDown) {
-      this.personaje.setVelocityX(-160);
+      this.personaje.setVelocityX(-200);
+      this.personaje.anims.play("caminar", true); //reproducir animación usando su "key"
+      this.personaje.flipX=true; //invertir la animación para ir al otro lado
+
     } else if (this.cursor.right.isDown){
-      this.personaje.setVelocityX(160);
+      this.personaje.setVelocityX(200);
+      this.personaje.anims.play("caminar", true);
+      this.personaje.flipX=false;
+
     } else {
       this.personaje.setVelocityX(0);
+      this.personaje.anims.play("quieto", true);
     }
     if (this.cursor.up.isDown && this.personaje.body.touching.down) {
       this.personaje.setVelocityY(-330);
+      this.personaje.anims.play("salto", true);
       }
 
   //Activar Game Over
@@ -147,9 +194,12 @@ export default class Game extends Phaser.Scene {
       }
 
       if (this.gameOver) { 
-        this.physics.pause(); //pausar pantalla cuando se activa Game Over
-        this.timerText.setText("Game Over");
-        return; //Hace una salida de la funcion para que no se vuelva a ejecutar
+        //this.physics.pause(); //pausar pantalla cuando se activa Game Over
+        this.scene.start("end", {
+        score: this.score,
+        gameOver: this.gameOver,
+        });
+        //return; //Hace una salida de la funcion para que no se vuelva a ejecutar
       }
 
         
@@ -159,8 +209,8 @@ export default class Game extends Phaser.Scene {
 onShapeCollect(personaje, recolectable) {
   console.log("Recolectado" , recolectable.texture.key);
 
-  const nombrefig = recolectable.texture.key; //Identificar cual figura se recolecta
-  const puntosfig = this.figuras[nombrefig].puntos; //Identificar cuantos puntos suma esa figura
+  const nombrefig = recolectable.getData("tipo"); //Identificar cual figura se recolecta
+  const puntosfig = recolectable.getData("puntos"); //Identificar cuantos puntos suma esa figura
   this.score += puntosfig; //Sumar los puntos de la figura al score
   console.log(this.score);
   this.figuras[nombrefig].cantidad += 1;
@@ -200,4 +250,13 @@ handlerTimer(){
     }
 }
 
+onRecolectableBounced(recolectable, plataforma) {
+  //recolectable rebote
+  let puntos = recolectable.getData("puntos");
+  puntos -= 5;
+  recolectable.setData("puntos", puntos);
+  if(puntos <= 0) {
+    recolectable.destroy();
+  }
+}
 }

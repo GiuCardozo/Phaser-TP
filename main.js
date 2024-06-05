@@ -1,11 +1,12 @@
 import Game from "./scenes/Game.js";
-import End from ".scenes/End.js";
+import End from "./scenes/End.js";
 
 // Create a new Phaser config object
 const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 600,
+  pixelArt: true,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -22,7 +23,7 @@ const config = {
     default: "arcade",
     arcade: {
       gravity: { y: 200 },
-      debug: true,
+      debug: false,
     },
   },
   // List of scenes to load
