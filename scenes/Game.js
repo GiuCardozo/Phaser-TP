@@ -22,22 +22,22 @@ export default class Game extends Phaser.Scene {
     // cargar assets
 
     //import Cielo
-    this.load.image("cielo","../public/assets/Cielo.webp");
+    this.load.image("cielo","./public/assets/Cielo.webp");
 
     //import plataforma
-    this.load.image("plataforma","../public/assets/platform.png");
+    this.load.image("plataforma","./public/assets/platform.png");
 
     //import personaje
-    this.load.spritesheet("personaje","../public/assets/ninja_anim.png", {frameWidth: 32, frameHeight: 32});
+    this.load.spritesheet("personaje","./public/assets/ninja_anim.png", {frameWidth: 32, frameHeight: 32});
 
     //import recolectables
-    this.load.image("rombo", "../public/assets/naranja.png");
+    this.load.image("rombo", "./public/assets/naranja.png");
     
-    this.load.image("cuadrado", "../public/assets/manzana.png");
+    this.load.image("cuadrado", "./public/assets/manzana.png");
 
-    this.load.image("triangulo", "../public/assets/pera.png");
+    this.load.image("triangulo", "./public/assets/pera.png");
     
-    this.load.image("bomb", "../public/assets/bomb.png");
+    this.load.image("bomb", "./public/assets/bomb.png");
   }
 
   create() {  //Todo lo que se agrega en la pantalla va aquí
